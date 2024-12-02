@@ -1,4 +1,5 @@
 import logging
+import json
 from flask import Flask
 from app.api.routes import api_bp
 from app.services.playback import PlaybackService
@@ -36,9 +37,15 @@ def create_app():
     
     app = Flask(__name__, instance_relative_config=True)
     
-    # Load configuration
+    # Load base configuration
     app.config.from_object('app.config.settings.Config')
-    app.config.from_json('config.json', silent=True)
+    
+    # Load instance configuration if it exists
+    try:
+        with open('/opt/spotify-appliance/instance/config.json', 'r') as f:
+            app.config.update(json.loads(f.read()))
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        logger.warning(f"Could not load instance config: {e}")
     
     # Initialize services
     from app.services.playback import PlaybackService

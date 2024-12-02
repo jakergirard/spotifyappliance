@@ -114,6 +114,23 @@ setup_application() {
     echo "Creating application directories..."
     mkdir -p ${APP_DIR}/{instance,logs}
 
+    # Create default instance config
+    echo "Creating default configuration..."
+    # Generate a random secret key
+    SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
+    cat > ${APP_DIR}/instance/config.json << EOF
+{
+    "SECRET_KEY": "${SECRET_KEY}",
+    "SPOTIFY_CLIENT_ID": null,
+    "SPOTIFY_CLIENT_SECRET": null,
+    "SPOTIFY_REDIRECT_URI": "http://localhost:5000/callback",
+    "DEFAULT_VOLUME": 70,
+    "FORCE_MONO": true
+}
+EOF
+    chown spotify-appliance:spotify-appliance ${APP_DIR}/instance/config.json
+    chmod 644 ${APP_DIR}/instance/config.json
+
     # Ensure python3-full is installed
     apt-get install -y python3-full
 

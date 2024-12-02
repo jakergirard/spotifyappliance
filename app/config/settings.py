@@ -1,13 +1,11 @@
 class Config:
     # Flask settings
-    SECRET_KEY = 'your-secret-key'  # Change this in production
+    SECRET_KEY = 'dev-key-change-in-production'
     
-    # Spotify settings
-    SPOTIFY_CLIENT_ID = 'YOUR_CLIENT_ID'
-    SPOTIFY_CLIENT_SECRET = 'YOUR_CLIENT_SECRET'
+    # Default settings
+    SPOTIFY_CLIENT_ID = None
+    SPOTIFY_CLIENT_SECRET = None
     SPOTIFY_REDIRECT_URI = 'http://localhost:5000/callback'
-    
-    # Audio settings
     DEFAULT_VOLUME = 70
     FORCE_MONO = True
     
