@@ -25,6 +25,7 @@ configure_base_system() {
         fail2ban \
         alsa-utils \
         i2c-tools \
+        python3-alsaaudio \
         unattended-upgrades
 
     # Configure automatic security updates
@@ -134,15 +135,12 @@ setup_application() {
 
     # Install Python dependencies
     echo "Installing Python dependencies..."
-    # Install build dependencies for alsaaudio
-    apt-get install -y python3-dev libasound2-dev
+    # Install alsaaudio from Debian repository
+    apt-get install -y python3-alsaaudio
 
     if [ -f "${PROJECT_ROOT}/requirements.txt" ]; then
         ${APP_DIR}/venv/bin/pip install --upgrade pip
         ${APP_DIR}/venv/bin/pip install -r "${PROJECT_ROOT}/requirements.txt"
-        # Install alsaaudio separately
-        echo "Installing alsaaudio..."
-        ${APP_DIR}/venv/bin/pip install python-alsaaudio
     else
         echo "ERROR: requirements.txt not found"
         echo "Project root (${PROJECT_ROOT}) contains: $(ls "${PROJECT_ROOT}")"
