@@ -109,73 +109,51 @@ EOF
 setup_application() {
     # Create application directory structure
     APP_DIR=/opt/spotify-appliance
+    echo "Creating application directories..."
     mkdir -p ${APP_DIR}/{instance,logs}
 
     # Create service user
+    echo "Configuring service user..."
     useradd -r -s /bin/false spotify-appliance || true  # Don't fail if user exists
+    usermod -aG audio spotify-appliance  # Ensure user has audio permissions
     chown -R spotify-appliance:spotify-appliance ${APP_DIR}
 
     # Copy application files
+    echo "Installing application files..."
     if [ -d "app" ]; then
         cp -r app ${APP_DIR}/
         cp main.py ${APP_DIR}/
     else
-        echo "Warning: Application files not found in current directory"
-        echo "Please copy application files to ${APP_DIR} manually"
+        echo "ERROR: Application files not found in current directory"
+        echo "Please ensure you're running this script from the project root directory"
+        echo "Current directory contains: $(ls)"
+        exit 1
     fi
 
     # Set up Python virtual environment
+    echo "Setting up Python environment..."
     python3 -m venv ${APP_DIR}/venv
     source ${APP_DIR}/venv/bin/activate
     
     # Install Python dependencies
+    echo "Installing Python dependencies..."
     if [ -f "requirements.txt" ]; then
+        pip install --upgrade pip
         pip install -r requirements.txt
     else
-        # Install required packages directly if requirements.txt is missing
-        pip install flask==3.0.0 spotipy==2.23.0 python-alsaaudio==0.10.0 psutil==5.9.6 requests==2.31.0
+        echo "ERROR: requirements.txt not found"
+        echo "Current directory contains: $(ls)"
+        exit 1
     fi
 
     # Install systemd service
+    echo "Installing systemd service..."
     if [ -f "spotify-appliance.service" ]; then
         cp spotify-appliance.service /etc/systemd/system/
     else
-        # Create service file if missing
-        cat > /etc/systemd/system/spotify-appliance.service << EOF
-[Unit]
-Description=Spotify Appliance Service
-After=network-online.target sound.target
-Wants=network-online.target
-StartLimitIntervalSec=300
-StartLimitBurst=5
-
-[Service]
-Type=simple
-User=spotify-appliance
-Group=audio
-WorkingDirectory=/opt/spotify-appliance
-Environment=DISPLAY=:0
-ExecStart=/opt/spotify-appliance/venv/bin/python3 main.py
-
-# Watchdog configuration
-WatchdogSec=30
-Restart=always
-RestartSec=10
-TimeoutStartSec=60
-TimeoutStopSec=30
-
-# Security hardening
-NoNewPrivileges=yes
-ProtectSystem=strict
-ProtectHome=yes
-ReadWritePaths=/opt/spotify-appliance/instance
-PrivateTmp=yes
-CapabilityBoundingSet=
-AmbientCapabilities=
-
-[Install]
-WantedBy=multi-user.target
-EOF
+        echo "ERROR: spotify-appliance.service not found"
+        echo "Current directory contains: $(ls)"
+        exit 1
     fi
 
     systemctl daemon-reload
@@ -184,20 +162,25 @@ EOF
 
 # Audio configuration
 configure_audio() {
+    echo "Configuring audio settings..."
     # Check if I2C is enabled
     if ! grep -q "^dtparam=i2c_arm=on" /boot/config.txt; then
+        echo "Enabling I2C..."
         echo "dtparam=i2c_arm=on" >> /boot/config.txt
     fi
 
     # Enable HiFiBerry DAC+ ADC Pro
     if ! grep -q "^dtoverlay=hifiberry-dacplusadcpro" /boot/config.txt; then
+        echo "Configuring HiFiBerry DAC..."
         echo "dtoverlay=hifiberry-dacplusadcpro" >> /boot/config.txt
     fi
     
     # Disable built-in audio
+    echo "Disabling built-in audio..."
     sed -i 's/^dtparam=audio=on/#dtparam=audio=on/' /boot/config.txt
     
     # Set up ALSA with fallback configuration
+    echo "Configuring ALSA..."
     cat > /etc/asound.conf << EOF
 pcm.!default {
     type plug
@@ -220,9 +203,11 @@ pcm.mono {
 EOF
 
     # Ensure the module is blacklisted
+    echo "Blacklisting built-in audio module..."
     echo "blacklist snd_bcm2835" > /etc/modprobe.d/raspi-blacklist.conf
     
     # Update ALSA module loading order
+    echo "Setting up HiFiBerry module..."
     cat > /etc/modprobe.d/hifiberry.conf << EOF
 options snd_soc_pcm512x index=0
 EOF
@@ -230,10 +215,19 @@ EOF
 
 # Main installation process
 echo "Starting Spotify Appliance installation..."
+echo "Current directory: $(pwd)"
+echo "Directory contents: $(ls)"
 
+echo "Step 1: Configuring base system..."
 configure_base_system
+
+echo "Step 2: Hardening system..."
 harden_system
+
+echo "Step 3: Setting up application..."
 setup_application
+
+echo "Step 4: Configuring audio..."
 configure_audio
 
 echo "Installation complete. Please configure Spotify credentials via web interface."
