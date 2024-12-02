@@ -10,6 +10,6 @@ class Config:
     FORCE_MONO = True
     
     # Playback settings
-    DEFAULT_PLAYLIST_URI = 'spotify:playlist:YOUR_DEFAULT_PLAYLIST'
+    DEFAULT_PLAYLIST_URI = None  # Set this to your desired playlist URI
     AUTO_RECLAIM_PLAYBACK = True
     RECLAIM_DELAY_SECONDS = 5 

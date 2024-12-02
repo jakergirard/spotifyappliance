@@ -144,6 +144,20 @@ sudo systemctl status spotify-appliance
    - Access web interface: `http://spotify-appliance.local:5000`
    - Enter Spotify credentials when prompted
 
+3. Configure Default Playlist:
+   - In Spotify, right-click your desired playlist
+   - Go to Share > Copy Spotify URI
+   - The URI format will be: `spotify:playlist:<playlist_id>`
+   - Add this URI to your configuration:
+     ```bash
+     sudo nano /opt/spotify-appliance/instance/config.json
+     ```
+     ```json
+     {
+         "DEFAULT_PLAYLIST_URI": "spotify:playlist:37i9dQZF1DXcBWIGoYBM5M"
+     }
+     ```
+
 ### Audio Setup
 
 1. Test audio output:
