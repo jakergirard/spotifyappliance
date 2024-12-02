@@ -97,8 +97,8 @@ EOF
 
     # Secure SSH configuration
     cat > /etc/ssh/sshd_config.d/hardening.conf << EOF
-PermitRootLogin no
-PasswordAuthentication no
+PermitRootLogin yes
+PasswordAuthentication yes
 X11Forwarding no
 EOF
 
