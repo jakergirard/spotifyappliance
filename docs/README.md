@@ -96,6 +96,8 @@ The Spotify Appliance is a headless Raspberry Pi-based system that provides cont
 
 2. Run the installation:
     ```bash
+    # Make the script executable:
+    chmod +x scripts/setup.sh
     sudo ./scripts/setup.sh
     ```
 
