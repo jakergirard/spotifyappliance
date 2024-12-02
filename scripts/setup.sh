@@ -109,10 +109,17 @@ EOF
 setup_application() {
     # Create application directory structure
     APP_DIR=/opt/spotify-appliance
-    # Get the project root directory (one level up from scripts/)
     PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "$0")")")"
     echo "Creating application directories..."
     mkdir -p ${APP_DIR}/{instance,logs}
+
+    # Ensure python3-full is installed
+    apt-get install -y python3-full
+
+    # Set up Python virtual environment first
+    echo "Setting up Python environment..."
+    python3 -m venv ${APP_DIR}/venv
+    source ${APP_DIR}/venv/bin/activate
 
     # Copy application files
     echo "Installing application files..."
@@ -128,8 +135,8 @@ setup_application() {
     # Install Python dependencies
     echo "Installing Python dependencies..."
     if [ -f "${PROJECT_ROOT}/requirements.txt" ]; then
-        pip install --upgrade pip
-        pip install -r "${PROJECT_ROOT}/requirements.txt"
+        ${APP_DIR}/venv/bin/pip install --upgrade pip
+        ${APP_DIR}/venv/bin/pip install -r "${PROJECT_ROOT}/requirements.txt"
     else
         echo "ERROR: requirements.txt not found"
         echo "Project root (${PROJECT_ROOT}) contains: $(ls "${PROJECT_ROOT}")"
@@ -146,10 +153,15 @@ setup_application() {
         exit 1
     fi
 
-    # Set up Python virtual environment
-    echo "Setting up Python environment..."
-    python3 -m venv ${APP_DIR}/venv
-    source ${APP_DIR}/venv/bin/activate
+    # Create service user and set permissions
+    echo "Configuring service user..."
+    useradd -r -s /bin/false spotify-appliance || true
+    usermod -aG audio spotify-appliance
+    chown -R spotify-appliance:spotify-appliance ${APP_DIR}
+
+    # Enable and start the service
+    systemctl daemon-reload
+    systemctl enable spotify-appliance
 }
 
 # Audio configuration
