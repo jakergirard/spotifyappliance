@@ -44,14 +44,19 @@ Unattended-Upgrade::MinimalSteps "true";
 EOF
 
     # Enable hardware watchdog
-    echo "bcm2835_wdt" >> /etc/modules
-    
-    # Configure systemd watchdog
-    cat > /etc/systemd/system.conf.d/watchdog.conf << EOF
+    if grep -q "bcm2835_wdt" /proc/modules || modprobe bcm2835_wdt; then
+        echo "bcm2835_wdt" >> /etc/modules
+        
+        # Configure systemd watchdog
+        mkdir -p /etc/systemd/system.conf.d/
+        cat > /etc/systemd/system.conf.d/watchdog.conf << EOF
 [Manager]
 RuntimeWatchdogSec=60
 ShutdownWatchdogSec=10min
 EOF
+    else
+        echo "Hardware watchdog not available, skipping watchdog configuration"
+    fi
 
     # Configure log rotation
     cat > /etc/logrotate.d/spotify-appliance << EOF
