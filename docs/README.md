@@ -131,16 +131,34 @@ sudo systemctl status spotify-appliance
 
 1. Test audio output:
    ```bash
+   # Check if HiFiBerry is detected
+   aplay -l
+   # Should show "card 0: sndrpihifiberry [snd_rpi_hifiberry_dacplusadc]"
+   
    # Test with white noise
-   speaker-test -c2 -t wav
+   speaker-test -D hw:0 -c2 -t wav
    ```
 
 2. Adjust volume:
    - Use web interface
    - Or command line:
    ```bash
-   alsamixer
+   alsamixer -c 0
    ```
+
+3. HiFiBerry-specific checks:
+   ```bash
+   # Check I2C device detection
+   sudo i2cdetect -y 1
+   
+   # Check ALSA configuration
+   cat /proc/asound/cards
+   ```
+
+4. Volume Control Notes:
+   - The HiFiBerry DAC+ ADC Pro uses hardware volume control
+   - Volume range is -103.5dB to 0dB
+   - Digital volume control is recommended for best quality
 
 ## Operation
 

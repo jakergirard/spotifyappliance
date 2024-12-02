@@ -2,11 +2,22 @@ import alsaaudio
 
 class AudioService:
     def __init__(self):
-        self.mixer = alsaaudio.Mixer('PCM')
+        try:
+            # Try HiFiBerry's hardware mixer first
+            self.mixer = alsaaudio.Mixer('Digital')
+        except alsaaudio.ALSAAudioError:
+            # Fall back to default PCM mixer
+            self.mixer = alsaaudio.Mixer('PCM')
         
     def set_volume(self, volume: int):
         """Set volume level (0-100)"""
-        self.mixer.setvolume(volume)
+        # HiFiBerry DAC+ ADC Pro has a different volume range
+        # Convert 0-100 to appropriate dB range (-103.5dB to 0dB)
+        if self.mixer.mixer() == 'Digital':
+            db_volume = (volume / 100.0) * 103.5 - 103.5
+            self.mixer.setvolume(int(-db_volume * 2))
+        else:
+            self.mixer.setvolume(volume)
         
     def get_volume(self) -> int:
         """Get current volume level"""

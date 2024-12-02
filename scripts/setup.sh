@@ -23,6 +23,8 @@ configure_base_system() {
         libasound2-dev \
         ufw \
         fail2ban \
+        alsa-utils \
+        i2c-tools \
         unattended-upgrades
 
     # Configure automatic security updates
@@ -125,14 +127,20 @@ setup_application() {
 
 # Audio configuration
 configure_audio() {
+    # Enable HiFiBerry DAC+ ADC Pro
+    echo "dtoverlay=hifiberry-dacplusadcpro" >> /boot/config.txt
+    
+    # Disable built-in audio
+    sed -i 's/^dtparam=audio=on/#dtparam=audio=on/' /boot/config.txt
+    
     # Set up ALSA with fallback configuration
     cat > /etc/asound.conf << EOF
 pcm.!default {
     type plug
-    slave.pcm "fallback"
+    slave.pcm "hifiberry"
 }
 
-pcm.fallback {
+pcm.hifiberry {
     type hw
     card 0
     device 0
@@ -141,10 +149,18 @@ pcm.fallback {
 # Mono output configuration
 pcm.mono {
     type route
-    slave.pcm "fallback"
+    slave.pcm "hifiberry"
     ttable.0.0 0.5
     ttable.1.0 0.5
 }
+EOF
+
+    # Ensure the module is blacklisted
+    echo "blacklist snd_bcm2835" > /etc/modprobe.d/raspi-blacklist.conf
+    
+    # Update ALSA module loading order
+    cat > /etc/modprobe.d/hifiberry.conf << EOF
+options snd_soc_pcm512x index=0
 EOF
 }
 
