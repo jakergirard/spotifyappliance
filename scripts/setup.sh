@@ -107,28 +107,92 @@ EOF
 
 # Application setup
 setup_application() {
-    # Create service user
-    useradd -r -s /bin/false spotify-appliance
+    # Create application directory structure
+    APP_DIR=/opt/spotify-appliance
+    mkdir -p ${APP_DIR}/{instance,logs}
 
-    # Create application directory
-    mkdir -p /opt/spotify-appliance
-    chown spotify-appliance:spotify-appliance /opt/spotify-appliance
+    # Create service user
+    useradd -r -s /bin/false spotify-appliance || true  # Don't fail if user exists
+    chown -R spotify-appliance:spotify-appliance ${APP_DIR}
+
+    # Copy application files
+    if [ -d "app" ]; then
+        cp -r app ${APP_DIR}/
+        cp main.py ${APP_DIR}/
+    else
+        echo "Warning: Application files not found in current directory"
+        echo "Please copy application files to ${APP_DIR} manually"
+    fi
 
     # Set up Python virtual environment
-    python3 -m venv /opt/spotify-appliance/venv
-    source /opt/spotify-appliance/venv/bin/activate
-    pip install -r requirements.txt
+    python3 -m venv ${APP_DIR}/venv
+    source ${APP_DIR}/venv/bin/activate
+    
+    # Install Python dependencies
+    if [ -f "requirements.txt" ]; then
+        pip install -r requirements.txt
+    else
+        # Install required packages directly if requirements.txt is missing
+        pip install flask==3.0.0 spotipy==2.23.0 python-alsaaudio==0.10.0 psutil==5.9.6 requests==2.31.0
+    fi
 
     # Install systemd service
-    cp spotify-appliance.service /etc/systemd/system/
+    if [ -f "spotify-appliance.service" ]; then
+        cp spotify-appliance.service /etc/systemd/system/
+    else
+        # Create service file if missing
+        cat > /etc/systemd/system/spotify-appliance.service << EOF
+[Unit]
+Description=Spotify Appliance Service
+After=network-online.target sound.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=spotify-appliance
+Group=audio
+WorkingDirectory=/opt/spotify-appliance
+Environment=DISPLAY=:0
+ExecStart=/opt/spotify-appliance/venv/bin/python3 main.py
+
+# Watchdog configuration
+WatchdogSec=30
+Restart=always
+RestartSec=10
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/spotify-appliance/instance
+PrivateTmp=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    fi
+
     systemctl daemon-reload
     systemctl enable spotify-appliance
 }
 
 # Audio configuration
 configure_audio() {
+    # Check if I2C is enabled
+    if ! grep -q "^dtparam=i2c_arm=on" /boot/config.txt; then
+        echo "dtparam=i2c_arm=on" >> /boot/config.txt
+    fi
+
     # Enable HiFiBerry DAC+ ADC Pro
-    echo "dtoverlay=hifiberry-dacplusadcpro" >> /boot/config.txt
+    if ! grep -q "^dtoverlay=hifiberry-dacplusadcpro" /boot/config.txt; then
+        echo "dtoverlay=hifiberry-dacplusadcpro" >> /boot/config.txt
+    fi
     
     # Disable built-in audio
     sed -i 's/^dtparam=audio=on/#dtparam=audio=on/' /boot/config.txt
@@ -172,4 +236,6 @@ harden_system
 setup_application
 configure_audio
 
-echo "Installation complete. Please configure Spotify credentials via web interface." 
+echo "Installation complete. Please configure Spotify credentials via web interface."
+echo "NOTE: A reboot is required for the HiFiBerry DAC to be properly initialized."
+echo "Please run 'sudo reboot' after reviewing the configuration." 
