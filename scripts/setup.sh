@@ -165,6 +165,12 @@ setup_application() {
     usermod -aG audio spotify-appliance
     chown -R spotify-appliance:spotify-appliance ${APP_DIR}
 
+    # Set up logging
+    echo "Setting up logging..."
+    touch /var/log/spotify-appliance.log
+    chown spotify-appliance:spotify-appliance /var/log/spotify-appliance.log
+    chmod 644 /var/log/spotify-appliance.log
+
     # Enable and start the service
     systemctl daemon-reload
     systemctl enable spotify-appliance

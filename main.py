@@ -7,12 +7,26 @@ from app.services.health import HealthMonitor
 import threading
 
 def setup_logging():
+    log_file = '/var/log/spotify-appliance.log'
+    
+    # Ensure log file exists and is writable
+    try:
+        with open(log_file, 'a'):
+            pass
+    except IOError:
+        # Fall back to stdout only if we can't write to the log file
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+        return
+    
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
             logging.StreamHandler(),
-            logging.FileHandler('/var/log/spotify-appliance.log')
+            logging.FileHandler(log_file)
         ]
     )
 
