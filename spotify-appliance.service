@@ -12,13 +12,12 @@ Group=audio
 WorkingDirectory=/opt/spotify-appliance
 Environment=DISPLAY=:0
 ExecStart=/opt/spotify-appliance/venv/bin/python3 main.py
-
-# Watchdog configuration
-WatchdogSec=30
 Restart=always
 RestartSec=10
 TimeoutStartSec=60
 TimeoutStopSec=30
+StandardOutput=journal
+StandardError=journal
 
 # Security hardening
 NoNewPrivileges=yes

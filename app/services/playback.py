@@ -1,5 +1,4 @@
 import time
-import librespot  # We'll use librespot-python for headless Spotify Connect
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
 
@@ -9,20 +8,8 @@ class PlaybackService:
         self.device_id = None
         self.is_playing = False
         self.current_track = None
-        self.spotify_connect = None
         
     def initialize_spotify(self):
-        # Initialize Spotify Connect device
-        self.spotify_connect = librespot.Session(
-            username=None,  # Will be set via web interface
-            password=None,  # Will be set via web interface
-            name="Spotify Appliance",
-            device_type=librespot.DeviceType.SPEAKER
-        )
-        
-        # Get the device ID after connecting
-        self.device_id = self.spotify_connect.device_id
-        
         # Initialize Spotify Web API client
         self.spotify = Spotify(auth_manager=SpotifyOAuth(
             client_id="YOUR_CLIENT_ID",
@@ -30,6 +17,13 @@ class PlaybackService:
             redirect_uri="http://localhost:5000/callback",
             scope="user-modify-playback-state user-read-playback-state streaming"
         ))
+        
+        # Get available devices and set our device ID
+        devices = self.spotify.devices()
+        for device in devices['devices']:
+            if device['name'] == "Spotify Appliance":
+                self.device_id = device['id']
+                break
         
     def start(self):
         self.initialize_spotify()
