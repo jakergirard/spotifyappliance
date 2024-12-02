@@ -88,15 +88,30 @@ The Spotify Appliance is a headless Raspberry Pi-based system that provides cont
 
 ### Software Installation
 
-1. Download the installation script:
-   ```bash
-   curl -O https://raw.githubusercontent.com/[your-repo]/spotify-appliance/main/scripts/setup.sh
-   chmod +x setup.sh
-   ```
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/jakergirard/spotifyappliance.git
+    cd spotifyappliance
+    ```
 
 2. Run the installation:
+    ```bash
+    sudo ./setup.sh
+    ```
+
+3. Configure Spotify credentials:
    ```bash
-   sudo ./setup.sh
+   # Edit the configuration file
+   sudo nano /opt/spotify-appliance/app/config/settings.py
+   
+   # Add your Spotify API credentials:
+   SPOTIFY_CLIENT_ID = 'your_client_id'
+   SPOTIFY_CLIENT_SECRET = 'your_client_secret'
+   ```
+
+4. Reboot to apply audio changes:
+   ```bash
+   sudo reboot
    ```
 
 ## Configuration
