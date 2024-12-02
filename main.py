@@ -73,7 +73,7 @@ def create_app():
     threading.Thread(target=start_services, daemon=True).start()
     
     # Register blueprints
-    app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(api_bp)
     
     return app
 

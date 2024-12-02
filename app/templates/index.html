@@ -1,34 +1,110 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Spotify Appliance Control</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Spotify Appliance</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #282828;
+            color: #fff;
+        }
+        .container {
+            background: #181818;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .status-panel {
+            margin: 20px 0;
+            padding: 15px;
+            background: #282828;
+            border-radius: 4px;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        .volume-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+        button {
+            background: #1DB954;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #1ed760;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Spotify Appliance Control</h1>
         
-        <div class="now-playing">
+        <div class="status-panel">
             <h2>Now Playing</h2>
-            <div id="current-track"></div>
+            <div id="now-playing">Loading...</div>
         </div>
-        
+
         <div class="controls">
-            <h2>Controls</h2>
-            <div class="volume-control">
-                <label for="volume">Volume:</label>
-                <input type="range" id="volume" min="0" max="100">
-            </div>
-            
+            <h2>Volume Control</h2>
+            <input type="range" id="volume" class="volume-slider" min="0" max="100" value="70">
+            <div id="volume-value">70%</div>
+        </div>
+
+        <div class="controls">
             <button onclick="reclaimPlayback()">Reclaim Playback</button>
         </div>
-        
-        <div class="queue">
-            <h2>Queue</h2>
-            <div id="queue-list"></div>
-        </div>
     </div>
-    
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <script>
+        // Update status every second
+        setInterval(updateStatus, 1000);
+
+        async function updateStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                document.getElementById('now-playing').innerHTML = 
+                    data.current_track ? 
+                    `${data.current_track.item.name} - ${data.current_track.item.artists[0].name}` :
+                    'Nothing playing';
+                document.getElementById('volume').value = data.volume;
+                document.getElementById('volume-value').textContent = `${data.volume}%`;
+            } catch (e) {
+                console.error('Error updating status:', e);
+            }
+        }
+
+        document.getElementById('volume').addEventListener('change', async (e) => {
+            try {
+                await fetch('/api/volume', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ volume: parseInt(e.target.value) })
+                });
+            } catch (e) {
+                console.error('Error setting volume:', e);
+            }
+        });
+
+        async function reclaimPlayback() {
+            try {
+                await fetch('/api/playback/reclaim', {
+                    method: 'POST'
+                });
+            } catch (e) {
+                console.error('Error reclaiming playback:', e);
+            }
+        }
+    </script>
 </body>
 </html> 

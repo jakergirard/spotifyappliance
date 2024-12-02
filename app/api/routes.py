@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, render_template
 from app.services.playback import PlaybackService
 from app.services.audio import AudioService
 
@@ -48,4 +48,8 @@ def setup_spotify():
         config_store.set_spotify_credentials(username, password)
         playback_service.initialize_spotify()
         return jsonify({'success': True})
-    return jsonify({'success': False, 'error': 'Missing credentials'}) 
+    return jsonify({'success': False, 'error': 'Missing credentials'})
+
+@api_bp.route('/', methods=['GET'])
+def index():
+    return render_template('index.html') 
