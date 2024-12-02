@@ -1,6 +1,9 @@
 import time
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
+import logging
+
+logger = logging.getLogger(__name__)
 
 class PlaybackService:
     def __init__(self):
@@ -10,21 +13,30 @@ class PlaybackService:
         self.current_track = None
         
     def initialize_spotify(self):
-        # Initialize Spotify Web API client
-        self.spotify = Spotify(auth_manager=SpotifyOAuth(
-            client_id="YOUR_CLIENT_ID",
-            client_secret="YOUR_CLIENT_SECRET",
-            redirect_uri="http://localhost:5000/callback",
-            scope="user-modify-playback-state user-read-playback-state streaming"
-        ))
-        
-        # Get available devices and set our device ID
-        devices = self.spotify.devices()
-        for device in devices['devices']:
-            if device['name'] == "Spotify Appliance":
-                self.device_id = device['id']
-                break
-        
+        try:
+            # Initialize Spotify Web API client
+            self.spotify = Spotify(auth_manager=SpotifyOAuth(
+                client_id="YOUR_CLIENT_ID",
+                client_secret="YOUR_CLIENT_SECRET",
+                redirect_uri="http://localhost:5000/callback",
+                scope="user-modify-playback-state user-read-playback-state streaming",
+                open_browser=False,
+                cache_path="/opt/spotify-appliance/instance/.spotify_cache"
+            ))
+            
+            # Get available devices and set our device ID
+            devices = self.spotify.devices()
+            for device in devices['devices']:
+                if device['name'] == "Spotify Appliance":
+                    self.device_id = device['id']
+                    break
+        except Exception as e:
+            logger.error(f"Failed to initialize Spotify: {e}")
+            # Wait before retrying
+            time.sleep(5)
+            return False
+        return True
+    
     def start(self):
         self.initialize_spotify()
         while True:

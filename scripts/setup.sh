@@ -131,6 +131,11 @@ EOF
     chown spotify-appliance:spotify-appliance ${APP_DIR}/instance/config.json
     chmod 644 ${APP_DIR}/instance/config.json
 
+    # Create Spotify cache file
+    touch ${APP_DIR}/instance/.spotify_cache
+    chown spotify-appliance:spotify-appliance ${APP_DIR}/instance/.spotify_cache
+    chmod 600 ${APP_DIR}/instance/.spotify_cache
+
     # Ensure python3-full is installed
     apt-get install -y python3-full
 
