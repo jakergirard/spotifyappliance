@@ -1,20 +1,13 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from app.services.playback import PlaybackService
 from app.services.audio import AudioService
-from app.config.persistence import ConfigStore
 
 api_bp = Blueprint('api', __name__)
-playback_service = None
-audio_service = None
-
-@api_bp.before_app_first_request
-def initialize_services():
-    global playback_service, audio_service
-    playback_service = PlaybackService()
-    audio_service = AudioService()
 
 @api_bp.route('/status', methods=['GET'])
 def get_status():
+    playback_service = current_app.config['playback_service']
+    audio_service = current_app.config['audio_service']
     current_playback = playback_service.spotify.current_playback()
     return jsonify({
         'is_playing': playback_service.is_playing,

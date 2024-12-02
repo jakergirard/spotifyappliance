@@ -27,8 +27,16 @@ def create_app():
     app.config.from_json('config.json', silent=True)
     
     # Initialize services
-    health_monitor = HealthMonitor()
+    from app.services.playback import PlaybackService
+    from app.services.audio import AudioService
     playback_service = PlaybackService()
+    audio_service = AudioService()
+    
+    # Make services available to routes
+    app.config['playback_service'] = playback_service
+    app.config['audio_service'] = audio_service
+    
+    health_monitor = HealthMonitor()
     device_monitor = DeviceMonitor(playback_service)
     
     # Start background services with error handling
