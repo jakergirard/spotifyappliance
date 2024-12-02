@@ -149,6 +149,124 @@ EOF
     if [ -d "${PROJECT_ROOT}/app" ]; then
         cp -r ${PROJECT_ROOT}/app ${APP_DIR}/
         cp ${PROJECT_ROOT}/main.py ${APP_DIR}/
+        # Create templates directory if it doesn't exist
+        mkdir -p ${APP_DIR}/app/templates
+        # Ensure index.html exists in templates
+        if [ ! -f "${APP_DIR}/app/templates/index.html" ]; then
+            echo "Creating index.html template..."
+            cat > ${APP_DIR}/app/templates/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Spotify Appliance</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #282828;
+            color: #fff;
+        }
+        .container {
+            background: #181818;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .status-panel {
+            margin: 20px 0;
+            padding: 15px;
+            background: #282828;
+            border-radius: 4px;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        .volume-slider {
+            width: 100%;
+            margin: 10px 0;
+        }
+        button {
+            background: #1DB954;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #1ed760;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Spotify Appliance Control</h1>
+        
+        <div class="status-panel">
+            <h2>Now Playing</h2>
+            <div id="now-playing">Loading...</div>
+        </div>
+
+        <div class="controls">
+            <h2>Volume Control</h2>
+            <input type="range" id="volume" class="volume-slider" min="0" max="100" value="70">
+            <div id="volume-value">70%</div>
+        </div>
+
+        <div class="controls">
+            <button onclick="reclaimPlayback()">Reclaim Playback</button>
+        </div>
+    </div>
+
+    <script>
+        // Update status every second
+        setInterval(updateStatus, 1000);
+
+        async function updateStatus() {
+            try {
+                const response = await fetch('/api/status');
+                const data = await response.json();
+                document.getElementById('now-playing').innerHTML = 
+                    data.current_track ? 
+                    `${data.current_track.item.name} - ${data.current_track.item.artists[0].name}` :
+                    'Nothing playing';
+                document.getElementById('volume').value = data.volume;
+                document.getElementById('volume-value').textContent = `${data.volume}%`;
+            } catch (e) {
+                console.error('Error updating status:', e);
+            }
+        }
+
+        document.getElementById('volume').addEventListener('change', async (e) => {
+            try {
+                await fetch('/api/volume', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ volume: parseInt(e.target.value) })
+                });
+            } catch (e) {
+                console.error('Error setting volume:', e);
+            }
+        });
+
+        async function reclaimPlayback() {
+            try {
+                await fetch('/api/playback/reclaim', {
+                    method: 'POST'
+                });
+            } catch (e) {
+                console.error('Error reclaiming playback:', e);
+            }
+        }
+    </script>
+</body>
+</html>
+EOF
+        fi
     else
         echo "ERROR: Application files not found"
         echo "Project root (${PROJECT_ROOT}) contains: $(ls "${PROJECT_ROOT}")"
