@@ -1,27 +1,42 @@
 import alsaaudio
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AudioService:
     def __init__(self):
         try:
-            # Try HiFiBerry's hardware mixer first
             self.mixer = alsaaudio.Mixer('Digital')
+            logger.info("Using HiFiBerry Digital mixer")
         except alsaaudio.ALSAAudioError:
-            # Fall back to default PCM mixer
-            self.mixer = alsaaudio.Mixer('PCM')
+            try:
+                self.mixer = alsaaudio.Mixer('PCM')
+                logger.info("Using PCM mixer")
+            except alsaaudio.ALSAAudioError as e:
+                logger.error(f"Failed to initialize audio mixer: {e}")
+                raise
         
     def set_volume(self, volume: int):
         """Set volume level (0-100)"""
-        # HiFiBerry DAC+ ADC Pro has a different volume range
-        # Convert 0-100 to appropriate dB range (-103.5dB to 0dB)
-        if self.mixer.mixer() == 'Digital':
-            db_volume = (volume / 100.0) * 103.5 - 103.5
-            self.mixer.setvolume(int(-db_volume * 2))
-        else:
-            self.mixer.setvolume(volume)
+        try:
+            if self.mixer.mixer() == 'Digital':
+                # HiFiBerry DAC+ ADC Pro uses a different volume range
+                db_volume = (volume / 100.0) * 103.5 - 103.5
+                self.mixer.setvolume(int(-db_volume * 2))
+            else:
+                self.mixer.setvolume(volume)
+            logger.debug(f"Volume set to {volume}")
+        except Exception as e:
+            logger.error(f"Failed to set volume: {e}")
+            raise
         
     def get_volume(self) -> int:
         """Get current volume level"""
-        return self.mixer.getvolume()[0]
+        try:
+            return self.mixer.getvolume()[0]
+        except Exception as e:
+            logger.error(f"Failed to get volume: {e}")
+            raise
     
     def setup_mono_output(self):
         """Configure system for mono audio output"""

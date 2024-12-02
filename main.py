@@ -48,8 +48,6 @@ def create_app():
         logger.warning(f"Could not load instance config: {e}")
     
     # Initialize services
-    from app.services.playback import PlaybackService
-    from app.services.audio import AudioService
     playback_service = PlaybackService()
     audio_service = AudioService()
     

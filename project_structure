@@ -8,14 +8,14 @@ spotifyappliance/
 │   │   └── settings.py
 │   ├── api/
 │   │   ├── __init__.py
-│   │   ├── spotify.py
 │   │   └── routes.py
 │   ├── services/
 │   │   ├── __init__.py
 │   │   ├── playback.py
 │   │   ├── audio.py
-│   │   └── device_monitor.py
+│   │   ├── device_monitor.py
+│   │   └── health.py
 │   └── templates/
-├── instance/
-│   └── config.json
-└── main.py 
+│       └── index.html
+├── requirements.txt
+└── spotify-appliance.service 

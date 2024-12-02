@@ -1,7 +1,7 @@
 import time
+import logging
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -13,8 +13,8 @@ class PlaybackService:
         self.current_track = None
         
     def initialize_spotify(self):
+        """Initialize Spotify client and get device ID"""
         try:
-            # Initialize Spotify Web API client
             self.spotify = Spotify(auth_manager=SpotifyOAuth(
                 client_id="YOUR_CLIENT_ID",
                 client_secret="YOUR_CLIENT_SECRET",
@@ -29,32 +29,48 @@ class PlaybackService:
             for device in devices['devices']:
                 if device['name'] == "Spotify Appliance":
                     self.device_id = device['id']
+                    logger.info(f"Found Spotify device: {self.device_id}")
                     break
+            
+            if not self.device_id:
+                logger.warning("Spotify device not found")
+                
+            return True
         except Exception as e:
             logger.error(f"Failed to initialize Spotify: {e}")
-            # Wait before retrying
-            time.sleep(5)
             return False
-        return True
-    
+        
     def start(self):
-        self.initialize_spotify()
+        """Start playback service"""
         while True:
             try:
+                if not self.spotify:
+                    if not self.initialize_spotify():
+                        time.sleep(5)
+                        continue
+
                 if not self.is_playing:
                     self.ensure_playback()
                 time.sleep(1)
             except Exception as e:
-                print(f"Playback error: {e}")
+                logger.error(f"Playback error: {e}")
                 time.sleep(5)
     
     def ensure_playback(self):
-        if not self.current_track:
-            # Start radio mode or default playlist
-            self.spotify.start_playback(device_id=self.device_id)
-            self.is_playing = True
+        """Ensure music is playing"""
+        try:
+            if not self.current_track and self.device_id:
+                self.spotify.start_playback(device_id=self.device_id)
+                self.is_playing = True
+                logger.info("Started playback")
+        except Exception as e:
+            logger.error(f"Failed to ensure playback: {e}")
     
     def reclaim_playback(self):
         """Force playback to this device"""
-        if self.device_id:
-            self.spotify.transfer_playback(device_id=self.device_id, force_play=True) 
+        try:
+            if self.device_id:
+                self.spotify.transfer_playback(device_id=self.device_id, force_play=True)
+                logger.info("Reclaimed playback")
+        except Exception as e:
+            logger.error(f"Failed to reclaim playback: {e}") 
