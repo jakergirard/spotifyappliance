@@ -156,6 +156,7 @@ EOF
     # Copy application files
     if [ -d "${PROJECT_ROOT}/app" ]; then
         cp -r ${PROJECT_ROOT}/app/* ${APP_DIR}/app/
+        cp ${PROJECT_ROOT}/main.py ${APP_DIR}/
         cp ${PROJECT_ROOT}/requirements.txt ${APP_DIR}/
         cp ${PROJECT_ROOT}/spotify-appliance.service /etc/systemd/system/
     else

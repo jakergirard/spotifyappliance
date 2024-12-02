@@ -5,6 +5,7 @@ from app.api.routes import api_bp
 from app.services.playback import PlaybackService
 from app.services.device_monitor import DeviceMonitor
 from app.services.health import HealthMonitor
+from app.services.audio import AudioService
 import threading
 
 def setup_logging():
