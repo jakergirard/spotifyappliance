@@ -109,128 +109,40 @@ EOF
 setup_application() {
     # Create application directory structure
     APP_DIR=/opt/spotify-appliance
+    # Get the project root directory (one level up from scripts/)
+    PROJECT_ROOT="$(dirname "$(dirname "$(readlink -f "$0")")")"
     echo "Creating application directories..."
     mkdir -p ${APP_DIR}/{instance,logs}
 
-    # Create main.py if it doesn't exist
-    if [ ! -f "main.py" ]; then
-        echo "Creating main.py..."
-        cat > main.py << 'EOF'
-from flask import Flask
-from app.api.routes import api_bp
-from app.services.playback import PlaybackService
-from app.services.device_monitor import DeviceMonitor
-from app.services.health import HealthMonitor
-import threading
-import logging
-
-def setup_logging():
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.StreamHandler(),
-            logging.FileHandler('/var/log/spotify-appliance.log')
-        ]
-    )
-
-def create_app():
-    setup_logging()
-    logger = logging.getLogger('spotify-appliance')
-    
-    app = Flask(__name__, instance_relative_config=True)
-    
-    app.config.from_object('app.config.settings.Config')
-    app.config.from_json('config.json', silent=True)
-    
-    health_monitor = HealthMonitor()
-    playback_service = PlaybackService()
-    device_monitor = DeviceMonitor(playback_service)
-    
-    def start_services():
-        try:
-            health_monitor.start()
-            playback_service.start()
-            device_monitor.start()
-        except Exception as e:
-            logger.error(f"Error starting services: {e}")
-            raise
-    
-    threading.Thread(target=start_services, daemon=True).start()
-    
-    app.register_blueprint(api_bp, url_prefix='/api')
-    
-    return app
-
-if __name__ == '__main__':
-    app = create_app()
-    app.run(host='0.0.0.0', port=5000)
-EOF
-    fi
-
-    # Create app directory structure and files
-    if [ ! -d "app" ]; then
-        echo "Creating application structure..."
-        mkdir -p app/{services,config,api}
-        touch app/__init__.py
-        touch app/api/__init__.py
-
-        # Create audio.py
-        cat > app/services/audio.py << 'EOF'
-import alsaaudio
-
-class AudioService:
-    def __init__(self):
-        try:
-            self.mixer = alsaaudio.Mixer('Digital')
-        except alsaaudio.ALSAAudioError:
-            self.mixer = alsaaudio.Mixer('PCM')
-        
-    def set_volume(self, volume: int):
-        if self.mixer.mixer() == 'Digital':
-            db_volume = (volume / 100.0) * 103.5 - 103.5
-            self.mixer.setvolume(int(-db_volume * 2))
-        else:
-            self.mixer.setvolume(volume)
-        
-    def get_volume(self) -> int:
-        return self.mixer.getvolume()[0]
-EOF
-
-        # Create other service files
-        touch app/services/__init__.py
-        touch app/services/playback.py
-        touch app/services/device_monitor.py
-        touch app/services/health.py
-
-        # Create settings
-        mkdir -p app/config
-        cat > app/config/settings.py << 'EOF'
-class Config:
-    SECRET_KEY = 'dev-key-change-in-production'
-    SPOTIFY_CLIENT_ID = None
-    SPOTIFY_CLIENT_SECRET = None
-    SPOTIFY_REDIRECT_URI = 'http://localhost:5000/callback'
-    DEFAULT_VOLUME = 70
-    FORCE_MONO = True
-EOF
-    fi
-
-    # Create service user
-    echo "Configuring service user..."
-    useradd -r -s /bin/false spotify-appliance || true
-    usermod -aG audio spotify-appliance
-    chown -R spotify-appliance:spotify-appliance ${APP_DIR}
-
     # Copy application files
     echo "Installing application files..."
-    if [ -d "app" ]; then
-        cp -r app ${APP_DIR}/
-        cp main.py ${APP_DIR}/
+    if [ -d "${PROJECT_ROOT}/app" ]; then
+        cp -r ${PROJECT_ROOT}/app ${APP_DIR}/
+        cp ${PROJECT_ROOT}/main.py ${APP_DIR}/
     else
-        echo "ERROR: Application files not found in current directory"
-        echo "Please ensure you're running this script from the project root directory"
-        echo "Current directory contains: $(ls)"
+        echo "ERROR: Application files not found"
+        echo "Project root (${PROJECT_ROOT}) contains: $(ls "${PROJECT_ROOT}")"
+        exit 1
+    fi
+
+    # Install Python dependencies
+    echo "Installing Python dependencies..."
+    if [ -f "${PROJECT_ROOT}/requirements.txt" ]; then
+        pip install --upgrade pip
+        pip install -r "${PROJECT_ROOT}/requirements.txt"
+    else
+        echo "ERROR: requirements.txt not found"
+        echo "Project root (${PROJECT_ROOT}) contains: $(ls "${PROJECT_ROOT}")"
+        exit 1
+    fi
+
+    # Install systemd service
+    echo "Installing systemd service..."
+    if [ -f "${PROJECT_ROOT}/spotify-appliance.service" ]; then
+        cp "${PROJECT_ROOT}/spotify-appliance.service" /etc/systemd/system/
+    else
+        echo "ERROR: spotify-appliance.service not found"
+        echo "Project root (${PROJECT_ROOT}) contains: $(ls "${PROJECT_ROOT}")"
         exit 1
     fi
 
@@ -238,30 +150,6 @@ EOF
     echo "Setting up Python environment..."
     python3 -m venv ${APP_DIR}/venv
     source ${APP_DIR}/venv/bin/activate
-    
-    # Install Python dependencies
-    echo "Installing Python dependencies..."
-    if [ -f "requirements.txt" ]; then
-        pip install --upgrade pip
-        pip install -r requirements.txt
-    else
-        echo "ERROR: requirements.txt not found"
-        echo "Current directory contains: $(ls)"
-        exit 1
-    fi
-
-    # Install systemd service
-    echo "Installing systemd service..."
-    if [ -f "spotify-appliance.service" ]; then
-        cp spotify-appliance.service /etc/systemd/system/
-    else
-        echo "ERROR: spotify-appliance.service not found"
-        echo "Current directory contains: $(ls)"
-        exit 1
-    fi
-
-    systemctl daemon-reload
-    systemctl enable spotify-appliance
 }
 
 # Audio configuration

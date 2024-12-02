@@ -96,7 +96,7 @@ The Spotify Appliance is a headless Raspberry Pi-based system that provides cont
 
 2. Run the installation:
     ```bash
-    sudo ./setup.sh
+    sudo ./scripts/setup.sh
     ```
 
 3. Configure Spotify credentials:

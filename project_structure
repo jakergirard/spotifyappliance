@@ -1,4 +1,7 @@
-spotify-appliance/
+spotifyappliance/
+├── README.md
+├── scripts/
+│   └── setup.sh
 ├── app/
 │   ├── __init__.py
 │   ├── config/
@@ -12,9 +15,6 @@ spotify-appliance/
 │   │   ├── playback.py
 │   │   ├── audio.py
 │   │   └── device_monitor.py
-│   ├── static/
-│   │   ├── css/
-│   │   └── js/
 │   └── templates/
 ├── instance/
 │   └── config.json
