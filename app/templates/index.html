@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Spotify Appliance Control</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Spotify Appliance Control</h1>
+        
+        <div class="now-playing">
+            <h2>Now Playing</h2>
+            <div id="current-track"></div>
+        </div>
+        
+        <div class="controls">
+            <h2>Controls</h2>
+            <div class="volume-control">
+                <label for="volume">Volume:</label>
+                <input type="range" id="volume" min="0" max="100">
+            </div>
+            
+            <button onclick="reclaimPlayback()">Reclaim Playback</button>
+        </div>
+        
+        <div class="queue">
+            <h2>Queue</h2>
+            <div id="queue-list"></div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html> 

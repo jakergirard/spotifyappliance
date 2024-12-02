@@ -1,0 +1,33 @@
+[Unit]
+Description=Spotify Appliance Service
+After=network-online.target sound.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=spotify-appliance
+Group=audio
+WorkingDirectory=/opt/spotify-appliance
+Environment=DISPLAY=:0
+ExecStart=/opt/spotify-appliance/venv/bin/python3 main.py
+
+# Watchdog configuration
+WatchdogSec=30
+Restart=always
+RestartSec=10
+TimeoutStartSec=60
+TimeoutStopSec=30
+
+# Security hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/spotify-appliance/instance
+PrivateTmp=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target 

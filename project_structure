@@ -1,0 +1,21 @@
+spotify-appliance/
+├── app/
+│   ├── __init__.py
+│   ├── config/
+│   │   └── settings.py
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── spotify.py
+│   │   └── routes.py
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── playback.py
+│   │   ├── audio.py
+│   │   └── device_monitor.py
+│   ├── static/
+│   │   ├── css/
+│   │   └── js/
+│   └── templates/
+├── instance/
+│   └── config.json
+└── main.py 
