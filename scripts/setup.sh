@@ -159,10 +159,34 @@ EOF
         touch ${PROJECT_ROOT}/app/__init__.py
         touch ${PROJECT_ROOT}/app/api/__init__.py
         touch ${PROJECT_ROOT}/app/services/__init__.py
+        mkdir -p ${PROJECT_ROOT}/app/config
+        touch ${PROJECT_ROOT}/app/config/__init__.py
+        
+        # Create settings.py if it doesn't exist
+        if [ ! -f "${PROJECT_ROOT}/app/config/settings.py" ]; then
+            cat > ${PROJECT_ROOT}/app/config/settings.py << 'EOF'
+class Config:
+    # Flask settings
+    SECRET_KEY = 'dev-key-change-in-production'
+    
+    # Default settings
+    SPOTIFY_CLIENT_ID = "1e9596caebd244a28385f07057ad29b0"
+    SPOTIFY_CLIENT_SECRET = "d978b6407ecb4afab8e99f1ebc017749"
+    SPOTIFY_REDIRECT_URI = 'http://localhost:5000/callback'
+    DEFAULT_VOLUME = 50
+    FORCE_MONO = True
+    
+    # Playback settings
+    DEFAULT_PLAYLIST_URI = 
+    AUTO_RECLAIM_PLAYBACK = True
+    RECLAIM_DELAY_SECONDS = 1
+EOF
+        fi
 
         cp -r ${PROJECT_ROOT}/app/templates ${APP_DIR}/app/
         cp -r ${PROJECT_ROOT}/app/api ${APP_DIR}/app/
         cp -r ${PROJECT_ROOT}/app/services ${APP_DIR}/app/
+        cp -r ${PROJECT_ROOT}/app/config ${APP_DIR}/app/
         cp ${PROJECT_ROOT}/app/__init__.py ${APP_DIR}/app/
         cp ${PROJECT_ROOT}/main.py ${APP_DIR}/
         cp ${PROJECT_ROOT}/requirements.txt ${APP_DIR}/
