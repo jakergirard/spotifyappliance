@@ -156,6 +156,12 @@ EOF
     # Copy application files
     if [ -d "${PROJECT_ROOT}/app" ]; then
         cp -r ${PROJECT_ROOT}/app/* ${APP_DIR}/app/
+        if [ ! -f "${APP_DIR}/app/templates/index.html" ]; then
+            echo "ERROR: index.html not found after copy"
+            echo "Source: ${PROJECT_ROOT}/app/templates/index.html"
+            echo "Destination: ${APP_DIR}/app/templates/index.html"
+            exit 1
+        fi
         cp ${PROJECT_ROOT}/main.py ${APP_DIR}/
         cp ${PROJECT_ROOT}/requirements.txt ${APP_DIR}/
         cp ${PROJECT_ROOT}/spotify-appliance.service /etc/systemd/system/
