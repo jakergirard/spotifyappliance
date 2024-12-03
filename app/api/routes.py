@@ -7,15 +7,23 @@ api_bp = Blueprint('api', __name__)
 @api_bp.route('/', methods=['GET'])
 def index():
     """Render main control interface"""
-    return render_template('index.html')
+    try:
+        return render_template('index.html')
+    except Exception as e:
+        logger.error(f"Failed to render index: {e}")
+        return str(e), 500
 
 @api_bp.route('/api/status', methods=['GET'])
 def get_status():
     """Get current playback status"""
     try:
+        logger.info("Status endpoint called")
         playback_service = current_app.config['playback_service']
         audio_service = current_app.config['audio_service']
+        logger.info(f"Services initialized - Playback: {playback_service is not None}, Audio: {audio_service is not None}")
+
         current_playback = playback_service.spotify.current_playback()
+        logger.info("Got current playback status")
         
         return jsonify({
             'is_playing': playback_service.is_playing,
@@ -24,7 +32,7 @@ def get_status():
             'device_id': playback_service.device_id
         })
     except Exception as e:
-        logger.error(f"Failed to get status: {e}")
+        logger.exception("Failed to get status")
         return jsonify({'error': str(e)}), 500
 
 @api_bp.route('/api/volume', methods=['POST'])

@@ -8,7 +8,9 @@ class AudioService:
         try:
             self.mixer = alsaaudio.Mixer('Digital')
             logger.info("Using HiFiBerry Digital mixer")
-        except alsaaudio.ALSAAudioError:
+            logger.info(f"Available mixers: {alsaaudio.mixers()}")
+        except alsaaudio.ALSAAudioError as e:
+            logger.warning(f"Failed to initialize Digital mixer: {e}")
             try:
                 self.mixer = alsaaudio.Mixer('PCM')
                 logger.info("Using PCM mixer")
