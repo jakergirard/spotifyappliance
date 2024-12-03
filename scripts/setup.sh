@@ -155,6 +155,11 @@ EOF
 
     # Copy application files
     if [ -d "${PROJECT_ROOT}/app" ]; then
+        # Create necessary __init__.py files if they don't exist
+        touch ${PROJECT_ROOT}/app/__init__.py
+        touch ${PROJECT_ROOT}/app/api/__init__.py
+        touch ${PROJECT_ROOT}/app/services/__init__.py
+
         cp -r ${PROJECT_ROOT}/app/templates ${APP_DIR}/app/
         cp -r ${PROJECT_ROOT}/app/api ${APP_DIR}/app/
         cp -r ${PROJECT_ROOT}/app/services ${APP_DIR}/app/
