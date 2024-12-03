@@ -138,7 +138,7 @@ install_application() {
     usermod -aG audio spotify-appliance
 
     # Create directory structure
-    mkdir -p ${APP_DIR}/{instance,app/templates}
+    mkdir -p ${APP_DIR}/{instance,app/{templates,api,services}}
     
     # Generate secret key and create config
     SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
@@ -155,13 +155,10 @@ EOF
 
     # Copy application files
     if [ -d "${PROJECT_ROOT}/app" ]; then
-        cp -r ${PROJECT_ROOT}/app/* ${APP_DIR}/app/
-        if [ ! -f "${APP_DIR}/app/templates/index.html" ]; then
-            echo "ERROR: index.html not found after copy"
-            echo "Source: ${PROJECT_ROOT}/app/templates/index.html"
-            echo "Destination: ${APP_DIR}/app/templates/index.html"
-            exit 1
-        fi
+        cp -r ${PROJECT_ROOT}/app/templates ${APP_DIR}/app/
+        cp -r ${PROJECT_ROOT}/app/api ${APP_DIR}/app/
+        cp -r ${PROJECT_ROOT}/app/services ${APP_DIR}/app/
+        cp ${PROJECT_ROOT}/app/__init__.py ${APP_DIR}/app/
         cp ${PROJECT_ROOT}/main.py ${APP_DIR}/
         cp ${PROJECT_ROOT}/requirements.txt ${APP_DIR}/
         cp ${PROJECT_ROOT}/spotify-appliance.service /etc/systemd/system/

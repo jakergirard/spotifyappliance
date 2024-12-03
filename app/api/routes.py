@@ -8,7 +8,7 @@ api_bp = Blueprint('api', __name__)
 def index():
     """Render main control interface"""
     try:
-        return render_template('index.html')
+        return render_template('index.html', title='Spotify Appliance')
     except Exception as e:
         logger.error(f"Failed to render index: {e}")
         return str(e), 500

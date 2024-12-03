@@ -36,7 +36,9 @@ def create_app():
     setup_logging()
     logger = logging.getLogger('spotify-appliance')
     
-    app = Flask(__name__, instance_relative_config=True)
+    app = Flask(__name__, 
+        instance_path='/opt/spotify-appliance/instance',
+        template_folder='app/templates')
     
     # Load base configuration
     app.config.from_object('app.config.settings.Config')
