@@ -170,8 +170,8 @@ class Config:
     SECRET_KEY = 'dev-key-change-in-production'
     
     # Default settings
-    SPOTIFY_CLIENT_ID = "1e9596caebd244a28385f07057ad29b0"
-    SPOTIFY_CLIENT_SECRET = "d978b6407ecb4afab8e99f1ebc017749"
+    SPOTIFY_CLIENT_ID = " "
+    SPOTIFY_CLIENT_SECRET = " "
     SPOTIFY_REDIRECT_URI = 'http://localhost:5000/callback'
     DEFAULT_VOLUME = 50
     FORCE_MONO = True
